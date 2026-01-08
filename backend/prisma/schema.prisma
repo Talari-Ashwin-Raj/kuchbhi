@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  manager Manager?
+  driver  Driver?
+  tickets Ticket[]
+  cars    Car[]
+}
+
+model Manager {
+  userId String        @id
+  status ManagerStatus @default(PENDING)
+
+  user User         @relation(fields: [userId], references: [id])
+  area ParkingArea?
+}
+
+model ParkingArea {
+  id        String   @id @default(uuid())
+  name      String
+  location  String
+  qrCode    String   @unique // manager-provided QR value
+  amount    String
+  createdAt DateTime @default(now())
+
+  managerId String  @unique
+  manager   Manager @relation(fields: [managerId], references: [userId])
+
+  drivers Driver[]
+  tickets Ticket[]
+}
+
+model Driver {
+  userId        String       @id
+  parkingAreaId String
+  status        DriverStatus @default(AVAILABLE)
+  dlNumber      String       @unique
+
+  user        User        @relation(fields: [userId], references: [id])
+  parkingArea ParkingArea @relation(fields: [parkingAreaId], references: [id])
+
+  requests DriverRequest[]
+}
+
+model Ticket {
+  ticketNumber String       @id // treated as ticket ID
+  status       TicketStatus @default(REQUESTED)
+  carId        String
+  createdAt    DateTime     @default(now())
+
+  userId        String
+  parkingAreaId String
+
+  user        User            @relation(fields: [userId], references: [id])
+  parkingArea ParkingArea     @relation(fields: [parkingAreaId], references: [id])
+  cars        Car             @relation(fields: [carId], references: [id])
+  requests    DriverRequest[]
+}
+
+model DriverRequest {
+  id          String        @id @default(uuid())
+  requestType RequestType
+  ticketNo    String
+  driverId    String?
+  status      RequestStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  driver Driver? @relation(fields: [driverId], references: [userId])
+  ticket Ticket  @relation(fields: [ticketNo], references: [ticketNumber])
+}
+
+model Car {
+  id          String @id @default(uuid())
+  userId      String
+  plateNumber String
+  brand       String
+  model       String
+  color       String
+
+  user    User     @relation(fields: [userId], references: [id])
+  tickets Ticket[]
+}
+
+enum Role {
+  SUPERADMIN
+  MANAGER
+  DRIVER
+  USER
+}
+
+enum ManagerStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  BUSY
+  INACTIVE
+}
+
+enum TicketStatus {
+  REQUESTED
+  DRIVER_ASSIGNED
+  PARKING_STARTED
+  PARKED
+  CAR_ON_THE_WAY
+  COMPLETED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+}
+
+enum RequestType {
+  PARKING
+  RETRIEVAL
+}
