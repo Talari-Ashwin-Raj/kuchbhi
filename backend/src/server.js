@@ -8,17 +8,19 @@ const PORT = process.env.PORT || 3000
 app.use(cors())
 app.use(express.json())
 
-app.get('/', (req, res) => {
-    res.send('backend chl gya')
+app.get('/', async(req, res) => {
+    const users = await prisma.user.findMany()
+    res.json({users})
 })
 
 const authRoutes = require('./routes/auth.routes')
+const userRoutes = require('./routes/user.routes')
 app.use('/api/auth', authRoutes)
-
+app.use('/api/user',userRoutes)
 // const userRoutes = require('./routes/user.routes')
 // const ticketRoutes = require('./routes/ticket.routes')
 // app.use('/api/user', userRoutes)
-// app.use('/api/tickets', ticketRoutes)
+// app.use('/api/tickets', ticketRoutes) 
 
 async function main() {
     try {

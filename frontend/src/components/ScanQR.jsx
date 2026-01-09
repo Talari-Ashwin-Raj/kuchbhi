@@ -79,7 +79,7 @@ function ScanQR({ onScanSuccess, onCancel }) {
 
     return (
         <div style={styles.container}>
-            <button style={styles.cancelButton} onClick={onCancel}>✕</button>
+            {/* <button style={styles.cancelButton} onClick={onCancel}>✕</button> */}
 
             <div style={styles.scannerFrame}>
                 {scanning && (

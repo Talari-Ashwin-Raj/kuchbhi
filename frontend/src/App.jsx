@@ -14,35 +14,13 @@ import ManagerDashboard from './components/ManagerDashboard';
 import DriverDashboard from './components/DriverDashboard';
 import SuperAdminDashboard from './components/SuperAdminDashboard';
 
-// --- MOCK DATABASE INITIALIZATION ---
+/* ---------------- MOCK DATA ---------------- */
 
-const INITIAL_USERS = [
-  { id: 'u1', name: 'Alice User', email: 'user@test.com', password: '123', role: 'USER' },
-  { id: 'm1', name: 'Bob Manager', email: 'manager@test.com', password: '123', role: 'MANAGER' },
-  { id: 'd1', name: 'Dave Driver', email: 'driver@test.com', password: '123', role: 'DRIVER' },
-  { id: 'a1', name: 'Super Admin', email: 'admin@test.com', password: '123', role: 'SUPERADMIN' }
-];
-
-// Manager Relation: userId link, status
-const INITIAL_MANAGERS = [
-  { userId: 'm1', status: 'ACTIVE' } // Assigned to Area 1
-];
-
-// Parking Area: Managed by m1
-const INITIAL_AREAS = [
-  { id: 'area1', name: 'Downtown Zone A', location: 'Main St', qrCode: 'AREA_ZONE_A_QR', managerId: 'm1', amount: '10' }
-];
-
-// Driver: userId link, parkingAreaId link, status
-const INITIAL_DRIVERS = [
-  { userId: 'd1', parkingAreaId: 'area1', status: 'AVAILABLE', dlNumber: 'DL-999' }
-];
-
-const INITIAL_CARS = [
-  { id: 'c1', userId: 'u1', plate: 'ABC-1234', model: 'Toyota Camry', color: 'Silver' }
-];
-
-// Tickets & Requests (Dynamic)
+const INITIAL_USERS = [];
+const INITIAL_MANAGERS = [];
+const INITIAL_AREAS = [{ qrCode: "AREA_ZONE_A_QR", id: "area_zone_a", name: "Area Zone A", status: "AVAILABLE" }];
+const INITIAL_DRIVERS = [{ id: "driver_1", name: "Driver 1", email: "driver1@gmail.com", phone: "1234567890", status: "AVAILABLE" }];
+const INITIAL_CARS = [];
 const INITIAL_TICKETS = [];
 const INITIAL_REQUESTS = [];
 
@@ -60,21 +38,35 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null); // The logged-in User object
   const [currentScreen, setCurrentScreen] = useState('LOGIN');
   const [history, setHistory] = useState([]);
-  consol
+  // consol
   // --- USER FLOW STATE ---
 
   // When a user scans a QR, we store the resolved area here
   const [selectedArea, setSelectedArea] = useState(null);
   const [activeTicket, setActiveTicket] = useState(null); // Simplified User View
 
+  /* ----------- RESTORE SESSION (IMPORTANT) ----------- */
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    const savedUser = localStorage.getItem('currentUser');
+    const savedScreen = localStorage.getItem('currentScreen');
+
+    if (token && savedUser && savedScreen) {
+      setCurrentUser(JSON.parse(savedUser));
+      setHistory([savedScreen])
+      setCurrentScreen(savedScreen)
+    }
+  }, []);
+  console.log(currentUser);
   // --- NAVIGATION ---
   const navigateTo = (screen, data = {}) => {
-    if (screen == "LOGIN" || screen == "REGISTER") {
+    if (screen == 'LOGIN' || screen == 'REGISTER') {
       setCurrentScreen(screen);
     }
     else {
       setHistory(prev => [...prev, screen]);
       setCurrentScreen(screen);
+      // localStorage.setItem('currentScreen', screen);
     }
     // Handle data passing if needed (usually via state updates before nav)
   };
@@ -94,6 +86,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.clear();
     setCurrentUser(null);
     setSelectedArea(null);
     setHistory([]);
@@ -113,6 +106,7 @@ function App() {
 
       if (!response.ok) {
         const errData = await response.json();
+        console.log(errData);
         return { success: false, message: errData.error };
       }
 
@@ -131,38 +125,15 @@ function App() {
        */
 
       // 🔐 Store token (client-side)
+
       localStorage.setItem('authToken', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-      // Optional: keep token in state if needed
-      // setAuthToken(data.token);
-
-      // 🔹 Set logged-in user
       setCurrentUser(data.user);
 
-      // 🔀 Route based on role (EXISTING FLOW)
-      switch (data.user.role) {
-        case 'SUPERADMIN':
-          navigateTo('ADMIN_DASHBOARD');
-          break;
-
-        case 'MANAGER':
-          navigateTo('MANAGER_DASHBOARD');
-          break;
-
-        case 'DRIVER':
-          navigateTo('DRIVER_DASHBOARD');
-          break;
-
-        case 'USER':
-          navigateTo('USER_DASHBOARD');
-          break;
-
-        default:
-          // Fallback safety
-          localStorage.removeItem('authToken');
-          setCurrentUser(null);
-          return { success: false, message: 'Unknown role' };
-      }
+      const dashboard = `${data.user.role}_DASHBOARD`;
+      localStorage.setItem('currentScreen', dashboard);
+      navigateTo(dashboard);
 
       return { success: true };
     } catch (error) {
@@ -172,6 +143,7 @@ function App() {
   };
 
   // --- BUSINESS LOGIC: USER ---
+
 
   const handleScanSuccess = (qrCode) => {
     // Find area by qrCode
@@ -301,7 +273,6 @@ function App() {
           <Dashboard
             user={currentUser}
             activeTicket={activeTicket} // Find actual active ticket from state?
-            bookings={[]}
             onNavigate={navigateTo}
           />
         );
@@ -317,20 +288,22 @@ function App() {
       // ROLE DASHBOARDS
       case 'MANAGER_DASHBOARD':
         // Find assigned area
-        const assignedArea = parkingAreas.find(p => p.managerId === currentUser.id);
-        const managerInfo = managers.find(m => m.userId === currentUser.id);
+        {
+          const assignedArea = parkingAreas.find(p => p.managerId === currentUser.id);
+          const managerInfo = managers.find(m => m.userId === currentUser.id)
 
-        return (
-          <ManagerDashboard
-            user={currentUser}
-            managerInfo={managerInfo}
-            parkingArea={assignedArea}
-            onAddDriver={handleRequestAddDriver}
-            onNavigate={navigateTo}
-          />
-        );
+          return (
+            <ManagerDashboard
+              user={currentUser}
+              managerInfo={managerInfo}
+              parkingArea={assignedArea}
+              onAddDriver={handleRequestAddDriver}
+              onNavigate={navigateTo}
+            />
+          )
+        };
 
-      case 'DRIVER_DASHBOARD':
+      case 'DRIVER_DASHBOARD': {
         // Find Driver Entry to get Area ID
         const driverProfile = drivers.find(d => d.userId === currentUser.id);
         // BROADCASST FILTER: status PENDING + same Area
@@ -346,7 +319,8 @@ function App() {
             onAccept={handleAcceptRequest}
             onNavigate={navigateTo}
           />
-        );
+        )
+      };
 
       case 'ADMIN_DASHBOARD':
         return (
@@ -368,17 +342,21 @@ function App() {
     }
   };
 
-  const isAuthScreen = currentScreen !== 'LOGIN' && currentScreen !== 'REGISTER';
+  const isAuthScreen = !['LOGIN', 'REGISTER'].includes(currentScreen);
 
   return (
     <div className="App">
       {isAuthScreen ? (
         <Layout
           onBack={history.length > 1 ? goBack : null}
-          onDashboard={() => handleLogin(currentUser.email, currentUser.password)} // Quick reset
+          onDashboard={() => {
+            setHistory([`${currentUser.role}_DASHBOARD`]);
+            setCurrentScreen(`${currentUser.role}_DASHBOARD`);
+            localStorage.setItem('currentScreen', `${currentUser.role}_DASHBOARD`);
+          }} // Quick reset
           onLogout={handleLogout}
           showBack={history.length > 1}
-          title={currentUser ? `${currentUser.role} View` : 'Parking App'}
+          title={`${currentUser?.role} Dashboard`}
         >
           {renderScreen()}
         </Layout>

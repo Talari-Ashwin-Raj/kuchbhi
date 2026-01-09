@@ -42,12 +42,12 @@ login = async (req, res) => {
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            return res.status(400).json({ ok:false,error: 'Invalid email or password.' });
+            return res.status(400).json({error: 'Invalid email or password.' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ ok:false,error: 'Invalid email or password.' });
+            return res.status(400).json({error: 'Invalid email or password.' });
         }
 
         const token = jwt.sign(
@@ -56,10 +56,10 @@ login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        res.json({ ok:true , token, user: { id: user.id, name: user.name, role: user.role } });
+        res.status(200).json({token, user: {name: user.name, role: user.role } });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ ok:false ,error: 'Server error during login.' });
+        res.status(500).json({error: 'Server error during login.' });
     }
 };
 
