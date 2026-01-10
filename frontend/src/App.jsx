@@ -40,9 +40,12 @@ function App() {
   const [history, setHistory] = useState([]);
   // consol
   // --- USER FLOW STATE ---
-
   // When a user scans a QR, we store the resolved area here
-  const [selectedArea, setSelectedArea] = useState(null);
+  const [bookingFlow, setBookingFlow] = useState({
+    carId: null,
+    parkingAreaId: null,
+    amount: null
+  })
   const [activeTicket, setActiveTicket] = useState(null); // Simplified User View
 
   /* ----------- RESTORE SESSION (IMPORTANT) ----------- */
@@ -58,8 +61,64 @@ function App() {
     }
   }, []);
   console.log(currentUser);
-  // --- NAVIGATION ---
+  // FIX: Restore fetchCars to prevent crash
+  const fetchCars = async () => {
+    if (!currentUser) return;
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      const res = await fetch('http://localhost:5001/api/user/cars', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCars(data);
+      }
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+    }
+  };
+
+  const handleAddCar = async (carData) => {
+    try {
+      const token = localStorage.getItem('authToken');
+
+      const res = await fetch('http://localhost:5001/api/user/cars', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(carData)
+      });
+
+      if (!res.ok) throw new Error('Failed to add car');
+
+      const newCar = await res.json();
+
+      // update global state
+      setCars(prev => [...prev, newCar]);
+
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add car');
+    }
+  };
+
+  // SYNC CARS ON SCREEN CHANGE (To ensure latest cars are available for BusinessInfo)
+  useEffect(() => {
+    if (currentUser) {
+      fetchCars();
+    }
+  }, [currentUser]); // Verify cars whenever screen changes (e.g. after adding car)
+
   const navigateTo = (screen, data = {}) => {
+    if (Object.keys(data).length > 0) {
+      setBookingFlow(prev => ({ ...prev, ...data }));
+    }
     if (screen == 'LOGIN' || screen == 'REGISTER') {
       setCurrentScreen(screen);
     }
@@ -88,7 +147,6 @@ function App() {
   const handleLogout = () => {
     localStorage.clear();
     setCurrentUser(null);
-    setSelectedArea(null);
     setHistory([]);
     setCurrentScreen('LOGIN');
   };
@@ -149,28 +207,27 @@ function App() {
     // Find area by qrCode
     const area = parkingAreas.find(a => a.qrCode === qrCode);
     if (area) {
-      setSelectedArea(area);
-      navigateTo('SELECT_CAR');
+      navigateTo('SELECT_CAR', { parkingAreaId: area.id });
     } else {
       alert("Invalid QR Code"); // Basic feedback
     }
   };
 
-  const handleAddCar = (carData) => new Promise((resolve) => {
-    const newCar = { ...carData, id: `c-${Date.now()}`, userId: currentUser.id };
-    setCars([...cars, newCar]);
-    resolve();
-  });
+  // const handleAddCar = (carData) => new Promise((resolve) => {
+  //   const newCar = { ...carData, id: `c-${Date.now()}`, userId: currentUser.id };
+  //   setCars([...cars, newCar]);
+  //   resolve();
+  // });
 
-  const handlePaymentSuccess = (carId) => {
+  const handlePaymentSuccess = () => {
     // 1. Create Ticket
     const newTicket = {
       ticketNumber: `TKT-${Date.now()}`,
       status: 'CALLED', // waiting for driver
-      carId: carId,
+      carId: bookingFlow.carId, // USE BOOKING FLOW
       createdAt: new Date().toISOString(),
       userId: currentUser.id,
-      parkingAreaId: selectedArea.id
+      parkingAreaId: bookingFlow.parkingAreaId // USE BOOKING FLOW
     };
 
     // 2. Create Driver Request (Broadcast to Area)
@@ -181,7 +238,7 @@ function App() {
       driverId: null, // Broadcast
       status: 'PENDING',
       createdAt: new Date().toISOString(),
-      parkingAreaId: selectedArea.id // Helper for filtering
+      parkingAreaId: bookingFlow.parkingAreaId // USE BOOKING FLOW
     };
 
     setTickets([...tickets, newTicket]);
@@ -279,9 +336,13 @@ function App() {
       case 'SCAN_QR':
         return <ScanQR onScanSuccess={handleScanSuccess} onCancel={() => navigateTo('USER_DASHBOARD')} />;
       case 'SELECT_CAR':
-        return <SelectCar cars={cars.filter(c => c.userId === currentUser.id)} onAddCar={handleAddCar} onNavigate={navigateTo} />;
+        // Removed handleAddCar prop to fix ReferenceError
+        // SelectCar fetches its own cars initially, but App fetches them for BusinessInfo
+        return <SelectCar cars={cars}
+          onAddCar={handleAddCar}
+          onNavigate={navigateTo} />;
       case 'MAKE_PAYMENT':
-        return <MakePayment onPay={handlePaymentSuccess} onNavigate={navigateTo} />;
+        return <MakePayment onPay={handlePaymentSuccess} onNavigate={navigateTo} amount={bookingFlow.amount} />;
       case 'TICKET_DISPLAY':
         return <Ticket ticket={activeTicket} onNavigate={navigateTo} />;
 
@@ -322,7 +383,7 @@ function App() {
         )
       };
 
-      case 'ADMIN_DASHBOARD':
+      case 'SUPERADMIN_DASHBOARD':
         return (
           <SuperAdminDashboard
             users={users}
@@ -337,6 +398,19 @@ function App() {
         );
       case 'REGISTER':
         return <Register onNavigate={navigateTo} />;
+      case 'BUSINESS_INFO': {
+        const selectedCar = cars.find(c => c.id === bookingFlow.carId);
+        const selectedArea = parkingAreas.find(p => p.id === bookingFlow.
+          parkingAreaId);
+        return (
+          <BusinessInfo
+            car={selectedCar}
+            parkingArea={selectedArea}
+            onNavigate={navigateTo}
+          />
+        );
+      }
+
       default:
         return <div>Screen {currentScreen} not found</div>;
     }

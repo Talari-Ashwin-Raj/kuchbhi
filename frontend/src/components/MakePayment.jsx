@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 
-function MakePayment({ onNavigate, onPay }) {
+function MakePayment({ onNavigate, onPay, amount }) {
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Mock payment details
-    const amount = 5.00;
 
     const handlePayment = () => {
         setIsProcessing(true);
@@ -58,7 +56,7 @@ function MakePayment({ onNavigate, onPay }) {
     return (
         <div style={styles.container}>
             <h2>Payment Due</h2>
-            <div style={styles.amount}>${amount.toFixed(2)}</div>
+            <div style={styles.amount}>₹{amount.toFixed(2)}</div>
 
             <div style={styles.cardForm}>
                 <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>Credit Card Details</div>

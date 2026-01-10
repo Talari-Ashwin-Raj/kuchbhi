@@ -1,77 +1,188 @@
-import React from 'react';
+// import React from 'react';
 
-function BusinessInfo({ onNavigate }) {
-    // Dummy data - in real app would come from API based on businessId
-    const business = {
-        name: 'City Center Mall Parking',
-        address: '123 Market St',
-        rate: '$5.00 / hour',
-        zones: ['Zone A', 'Zone B', 'VIP']
-    };
+// function BusinessInfo({ car, parkingArea, onNavigate }) {
+//     // Prevents crash if state is temporarily null/undefined
+//     // if (!car || !parkingArea) {
+//     //     return (
+//     //         <div style={{ padding: '20px', textAlign: 'center' }}>
+//     //             <h3>Loading booking details...</h3>
+//     //             <p>Please wait or try scanning again.</p>
+//     //             <button
+//     //                 onClick={() => onNavigate('USER_DASHBOARD')}
+//     //                 style={{
+//     //                     padding: '10px 20px',
+//     //                     background: '#ef4444',
+//     //                     color: 'white',
+//     //                     border: 'none',
+//     //                     borderRadius: '8px',
+//     //                     cursor: 'pointer'
+//     //                 }}
+//     //             >
+//     //                 Go Home
+//     //             </button>
+//     //         </div>
+//     //     );
+//     // }
 
-    const handleConfirm = () => {
-        onNavigate('MAKE_PAYMENT');
-    };
+//     // 2. Business Logic calculations
+//     const baseRate = 100;
+//     const serviceFee = 30;
+//     const gst = 20;
+//     const totalAmount = baseRate + serviceFee + gst;
 
-    const styles = {
-        container: {
-            padding: '20px',
-            textAlign: 'center',
-        },
-        image: {
-            width: '100%',
-            height: '150px',
-            backgroundColor: '#ddd',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-        },
-        details: {
-            textAlign: 'left',
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            marginBottom: '20px',
-        },
-        button: {
-            width: '100%',
-            padding: '15px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '18px',
-            cursor: 'pointer',
-        }
-    };
+//     const styles = {
+//         container: { padding: '16px', fontFamily: 'sans-serif' },
+//         card: {
+//             background: '#fff',
+//             padding: '16px',
+//             borderRadius: '12px',
+//             marginBottom: '16px',
+//             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+//             border: '1px solid #e5e7eb'
+//         },
+//         sectionTitle: {
+//             fontSize: '18px',
+//             fontWeight: '600',
+//             marginBottom: '12px',
+//             color: '#111827'
+//         },
+//         row: {
+//             display: 'flex',
+//             justifyContent: 'space-between',
+//             marginBottom: '8px',
+//             fontSize: '14px',
+//             color: '#4b5563'
+//         },
+//         value: {
+//             fontWeight: '500',
+//             color: '#111827'
+//         },
+//         divider: {
+//             margin: '12px 0',
+//             border: '0',
+//             borderTop: '1px solid #e5e7eb'
+//         },
+//         totalRow: {
+//             display: 'flex',
+//             justifyContent: 'space-between',
+//             fontSize: '18px',
+//             fontWeight: 'bold',
+//             color: '#111827'
+//         },
+//         button: {
+//             width: '100%',
+//             padding: '16px',
+//             backgroundColor: '#4f46e5',
+//             color: 'white',
+//             border: 'none',
+//             borderRadius: '12px',
+//             fontSize: '16px',
+//             fontWeight: '600',
+//             cursor: 'pointer',
+//             marginTop: '8px'
+//         }
+//     };
+
+//     return (
+//         <div style={styles.container}>
+//             {/* Car Details */}
+//             <div style={styles.card}>
+//                 <div style={styles.sectionTitle}>Vehicle Details</div>
+//                 <div style={styles.row}>
+//                     <span>Vehicle</span>
+//                     <span style={styles.value}>{car.brand} {car.model}</span>
+//                 </div>
+//                 <div style={styles.row}>
+//                     <span>Plate Number</span>
+//                     <span style={styles.value}>{car.plateNumber}</span>
+//                 </div>
+//                 <div style={styles.row}>
+//                     <span>Color</span>
+//                     <span style={styles.value}>{car.color}</span>
+//                 </div>
+//             </div>
+
+//             {/* Parking Details */}
+//             <div style={styles.card}>
+//                 <div style={styles.sectionTitle}>Parking Location</div>
+//                 <div style={styles.row}>
+//                     <span>Area Name</span>
+//                     <span style={styles.value}>{parkingArea.name}</span>
+//                 </div>
+//                 <div style={styles.row}>
+//                     <span>Status</span>
+//                     <span style={{ ...styles.value, color: 'green' }}>Reserved</span>
+//                 </div>
+//             </div>
+
+//             {/* Payment Summary */}
+//             <div style={styles.card}>
+//                 <div style={styles.sectionTitle}>Payment Summary</div>
+//                 <div style={styles.row}>
+//                     <span>Base Rate</span>
+//                     <span style={styles.value}>₹{baseRate}</span>
+//                 </div>
+//                 <div style={styles.row}>
+//                     <span>Service Fee</span>
+//                     <span style={styles.value}>₹{serviceFee}</span>
+//                 </div>
+//                 <div style={styles.row}>
+//                     <span>GST</span>
+//                     <span style={styles.value}>₹{gst}</span>
+//                 </div>
+//                 <hr style={styles.divider} />
+//                 <div style={styles.totalRow}>
+//                     <span>Total</span>
+//                     <span>₹{totalAmount}</span>
+//                 </div>
+//             </div>
+
+//             {/* Action */}
+//             <button
+//                 style={styles.button}
+//                 onClick={() => onNavigate('MAKE_PAYMENT', { amount: totalAmount })}
+//             >
+//                 Proceed to Payment
+//             </button>
+//         </div>
+//     );
+// }
+
+// export default BusinessInfo;
+function BusinessInfo({ car, parkingArea, onNavigate }) {
+    if (!car || !parkingArea) {
+        return <div style={{ padding: 20 }}>Loading...</div>;
+    }
+
+    const amount = 150;
 
     return (
-        <div style={styles.container}>
-            <div style={styles.image}>
-                [Business Image]
-            </div>
-            <div style={styles.details}>
-                <h2 style={{ marginTop: 0 }}>{business.name}</h2>
-                <p style={{ color: '#666' }}>📍 {business.address}</p>
-                <div style={{ margin: '15px 0', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                    <strong>Rate:</strong> {business.rate}
-                </div>
-                <div>
-                    <strong>Available Zones:</strong>
-                    <ul style={{ paddingLeft: '20px' }}>
-                        {business.zones.map(z => <li key={z}>{z}</li>)}
-                    </ul>
-                </div>
-            </div>
+        <div style={{ padding: 15 }}>
+            <h3>Vehicle</h3>
+            <p>{car.brand} {car.model}</p>
+            <p>Plate: {car.plateNumber}</p>
 
-            <button style={styles.button} onClick={handleConfirm}>
+            <h3>Parking Area</h3>
+            <p>{parkingArea.name}</p>
+
+            <h3>Payment</h3>
+            <p>Total: ₹{amount}</p>
+
+            <button
+                onClick={() => onNavigate('MAKE_PAYMENT', { amount })}
+                style={{
+                    width: '100%',
+                    padding: 12,
+                    marginTop: 20,
+                    background: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6
+                }}
+            >
                 Proceed to Payment
             </button>
         </div>
     );
 }
-
 export default BusinessInfo;
