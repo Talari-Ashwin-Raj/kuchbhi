@@ -56,7 +56,7 @@ login = async (req, res) => {
             { expiresIn: '1d' }
         );
 
-        res.status(200).json({token, user: {id:user.id,name: user.name, role: user.role } });
+        res.status(200).json({token, user: {id:user.id, name: user.name, role: user.role } });
     } catch (error) {
         console.error(error);
         res.status(500).json({error: 'Server error during login.' });

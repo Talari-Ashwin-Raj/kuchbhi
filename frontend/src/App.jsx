@@ -17,7 +17,6 @@ import SuperAdminDashboard from './components/SuperAdminDashboard';
 /* ---------------- MOCK DATA ---------------- */
 
 const INITIAL_USERS = [];
-const INITIAL_MANAGERS = [];
 const INITIAL_AREAS = [{ qrCode: "AREA_ZONE_A_QR", id: "area_zone_a", name: "Area Zone A", status: "AVAILABLE" }];
 const INITIAL_DRIVERS = [{ id: "driver_1", name: "Driver 1", email: "driver1@gmail.com", phone: "1234567890", status: "AVAILABLE" }];
 const INITIAL_CARS = [];
@@ -27,7 +26,6 @@ const INITIAL_REQUESTS = [];
 function App() {
   // --- CENTRALIZED STATE (Simulating Backend) ---
   const [users, setUsers] = useState(INITIAL_USERS);
-  const [managers, setManagers] = useState(INITIAL_MANAGERS);
   const [parkingAreas, setParkingAreas] = useState(INITIAL_AREAS);
   const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
   const [cars, setCars] = useState(INITIAL_CARS);
@@ -271,38 +269,38 @@ function App() {
   };
 
   // --- BUSINESS LOGIC: SUPER ADMIN ---
-  const handleAddManager = (userData) => {
-    // Create user with role MANAGER
-    const newUser = { ...userData, id: `u-${Date.now()}`, role: 'MANAGER' };
-    // Create Manager entry (Pending until assigned)
-    const newManager = { userId: newUser.id, status: 'PENDING' };
+  // const handleAddManager = (userData) => {
+  //   // Create user with role MANAGER
+  //   const newUser = { ...userData, id: `u-${Date.now()}`, role: 'MANAGER' };
+  //   // Create Manager entry (Pending until assigned)
+  //   const newManager = { userId: newUser.id, status: 'PENDING' };
 
-    setUsers([...users, newUser]);
-    setManagers([...managers, newManager]);
-  };
+  //   setUsers([...users, newUser]);
+  //   setManagers([...managers, newManager]);
+  // };
 
-  const handleCreateArea = (areaData, managerUserId) => {
-    // Create Area
-    const newArea = { ...areaData, id: `area-${Date.now()}`, managerId: managerUserId };
-    setParkingAreas([...parkingAreas, newArea]);
+  // const handleCreateArea = (areaData, managerUserId) => {
+  //   // Create Area
+  //   const newArea = { ...areaData, id: `area-${Date.now()}`, managerId: managerUserId };
+  //   setParkingAreas([...parkingAreas, newArea]);
 
-    // Update Manager Status to ACTIVE
-    const updatedManagers = managers.map(m =>
-      m.userId === managerUserId ? { ...m, status: 'ACTIVE' } : m
-    );
-    setManagers(updatedManagers);
-  };
+  //   // Update Manager Status to ACTIVE
+  //   const updatedManagers = managers.map(m =>
+  //     m.userId === managerUserId ? { ...m, status: 'ACTIVE' } : m
+  //   );
+  //   setManagers(updatedManagers);
+  // };
 
-  const handleApproveDriver = (driverUserId) => {
-    // This assumes there's a flow to add a PENDING Driver. 
-    // For now, let's assume SuperAdmin can just create the driver entirely or flip status.
-    // Based on requirement: Manager sends request -> Admin approves.
-    // So we need "addPendingDriver" action from Manager.
-    const updatedDrivers = drivers.map(d =>
-      d.userId === driverUserId ? { ...d, status: 'AVAILABLE' } : d
-    );
-    setDrivers(updatedDrivers);
-  };
+  // const handleApproveDriver = (driverUserId) => {
+  //   // This assumes there's a flow to add a PENDING Driver. 
+  //   // For now, let's assume SuperAdmin can just create the driver entirely or flip status.
+  //   // Based on requirement: Manager sends request -> Admin approves.
+  //   // So we need "addPendingDriver" action from Manager.
+  //   const updatedDrivers = drivers.map(d =>
+  //     d.userId === driverUserId ? { ...d, status: 'AVAILABLE' } : d
+  //   );
+  //   setDrivers(updatedDrivers);
+  // };
 
   // --- BUSINESS LOGIC: MANAGER ---
   const handleRequestAddDriver = (driverUserData, parkingAreaId) => {
@@ -386,13 +384,7 @@ function App() {
       case 'SUPERADMIN_DASHBOARD':
         return (
           <SuperAdminDashboard
-            users={users}
-            managers={managers}
             drivers={drivers}
-            parkingAreas={parkingAreas}
-            onAddManager={handleAddManager}
-            onCreateArea={handleCreateArea}
-            onApproveDriver={handleApproveDriver}
             onNavigate={navigateTo}
           />
         );

@@ -15,8 +15,10 @@ app.get('/', async(req, res) => {
 
 const authRoutes = require('./routes/auth.routes')
 const userRoutes = require('./routes/user.routes')
+const adminRoutes = require('./routes/superAdmin.routes')
 app.use('/api/auth', authRoutes)
 app.use('/api/user',userRoutes)
+app.use('/api/superAdmin',adminRoutes)
 // const userRoutes = require('./routes/user.routes')
 // const ticketRoutes = require('./routes/ticket.routes')
 // app.use('/api/user', userRoutes)
