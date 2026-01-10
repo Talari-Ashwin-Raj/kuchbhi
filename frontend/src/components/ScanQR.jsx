@@ -8,7 +8,7 @@ function ScanQR({ onScanSuccess, onCancel }) {
         // In a real implementation, this would come from a library like react-qr-reader
         // For now, we simulate finding a valid ParkingArea QR code.
         // Schema requires a 'qrCode' string.
-        const mockQRCode = "AREA_ZONE_A_QR";
+        const mockQRCode = "dummyQR1";
 
         // STRICT RULE: No navigation here. Just verify data availability and callback.
         if (onScanSuccess) {

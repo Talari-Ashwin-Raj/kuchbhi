@@ -154,7 +154,6 @@ function BusinessInfo({ car, parkingArea, onNavigate }) {
         return <div style={{ padding: 20 }}>Loading...</div>;
     }
 
-    const amount = 150;
 
     return (
         <div style={{ padding: 15 }}>
@@ -166,10 +165,10 @@ function BusinessInfo({ car, parkingArea, onNavigate }) {
             <p>{parkingArea.name}</p>
 
             <h3>Payment</h3>
-            <p>Total: ₹{amount}</p>
+            <p>Total: ₹{parkingArea.amount}</p>
 
             <button
-                onClick={() => onNavigate('MAKE_PAYMENT', { amount })}
+                onClick={() => onNavigate('MAKE_PAYMENT', { amount: Number(parkingArea.amount) })}
                 style={{
                     width: '100%',
                     padding: 12,

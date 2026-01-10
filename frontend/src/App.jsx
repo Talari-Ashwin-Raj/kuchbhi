@@ -17,7 +17,7 @@ import SuperAdminDashboard from './components/SuperAdminDashboard';
 /* ---------------- MOCK DATA ---------------- */
 
 const INITIAL_USERS = [];
-const INITIAL_AREAS = [{ qrCode: "AREA_ZONE_A_QR", id: "area_zone_a", name: "Area Zone A", status: "AVAILABLE" }];
+const INITIAL_AREAS = [];
 const INITIAL_DRIVERS = [{ id: "driver_1", name: "Driver 1", email: "driver1@gmail.com", phone: "1234567890", status: "AVAILABLE" }];
 const INITIAL_CARS = [];
 const INITIAL_TICKETS = [];
@@ -25,8 +25,7 @@ const INITIAL_REQUESTS = [];
 
 function App() {
   // --- CENTRALIZED STATE (Simulating Backend) ---
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [parkingAreas, setParkingAreas] = useState(INITIAL_AREAS);
+  const [scannedArea, setScannedArea] = useState(null);
   const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
   const [cars, setCars] = useState(INITIAL_CARS);
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
@@ -200,13 +199,31 @@ function App() {
   // --- BUSINESS LOGIC: USER ---
 
 
-  const handleScanSuccess = (qrCode) => {
-    // Find area by qrCode
-    const area = parkingAreas.find(a => a.qrCode === qrCode);
-    if (area) {
-      navigateTo('SELECT_CAR', { parkingAreaId: area.id });
-    } else {
-      alert("Invalid QR Code"); // Basic feedback
+  const handleScanSuccess = async (qrCode) => {
+    try {
+      const token = localStorage.getItem('authToken');
+
+      const res = await fetch(
+        `http://localhost:5001/api/user/parking-area-by-qr/${qrCode}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Invalid QR Code');
+        return;
+      }
+      setScannedArea(data);
+      navigateTo('SELECT_CAR', { parkingAreaId: data.id });
+
+    } catch (err) {
+      console.error(err);
+      alert('Server error while scanning QR');
     }
   };
 
@@ -371,8 +388,7 @@ function App() {
         return <Register onNavigate={navigateTo} />;
       case 'BUSINESS_INFO': {
         const selectedCar = cars.find(c => c.id === bookingFlow.carId);
-        const selectedArea = parkingAreas.find(p => p.id === bookingFlow.
-          parkingAreaId);
+        const selectedArea = scannedArea;
         return (
           <BusinessInfo
             car={selectedCar}
