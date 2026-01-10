@@ -51,7 +51,6 @@ function App() {
     const token = localStorage.getItem('authToken');
     const savedUser = localStorage.getItem('currentUser');
     const savedScreen = localStorage.getItem('currentScreen');
-
     if (token && savedUser && savedScreen) {
       setCurrentUser(JSON.parse(savedUser));
       setHistory([savedScreen])
@@ -180,7 +179,7 @@ function App() {
        * }
        */
 
-      // 🔐 Store token (client-side)
+      // Store token (client-side)
 
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(data.user));
@@ -303,16 +302,16 @@ function App() {
   // };
 
   // --- BUSINESS LOGIC: MANAGER ---
-  const handleRequestAddDriver = (driverUserData, parkingAreaId) => {
-    // Create User (Driver)
-    const newUser = { ...driverUserData, id: `u-${Date.now()}`, role: 'DRIVER' };
-    // Create Driver (Pending Validation/Approval)
-    const newDriver = { userId: newUser.id, parkingAreaId, status: 'INACTIVE', dlNumber: driverUserData.dlNumber };
+  // const handleRequestAddDriver = (driverUserData, parkingAreaId) => {
+  //   // Create User (Driver)
+  //   const newUser = { ...driverUserData, id: `u-${Date.now()}`, role: 'DRIVER' };
+  //   // Create Driver (Pending Validation/Approval)
+  //   const newDriver = { userId: newUser.id, parkingAreaId, status: 'INACTIVE', dlNumber: driverUserData.dlNumber };
 
-    setUsers([...users, newUser]);
-    setDrivers([...drivers, newDriver]);
-    // Note: Real world would have a specific "Approval Request" object or just filter drivers by status 'INACTIVE'
-  };
+  //   setUsers([...users, newUser]);
+  //   setDrivers([...drivers, newDriver]);
+  //   // Note: Real world would have a specific "Approval Request" object or just filter drivers by status 'INACTIVE'
+  // };
 
 
   // --- RENDERER ---
@@ -343,25 +342,9 @@ function App() {
         return <MakePayment onPay={handlePaymentSuccess} onNavigate={navigateTo} amount={bookingFlow.amount} />;
       case 'TICKET_DISPLAY':
         return <Ticket ticket={activeTicket} onNavigate={navigateTo} />;
-
       // ROLE DASHBOARDS
       case 'MANAGER_DASHBOARD':
-        // Find assigned area
-        {
-          const assignedArea = parkingAreas.find(p => p.managerId === currentUser.id);
-          const managerInfo = managers.find(m => m.userId === currentUser.id)
-
-          return (
-            <ManagerDashboard
-              user={currentUser}
-              managerInfo={managerInfo}
-              parkingArea={assignedArea}
-              onAddDriver={handleRequestAddDriver}
-              onNavigate={navigateTo}
-            />
-          )
-        };
-
+        return <ManagerDashboard user={currentUser} />;
       case 'DRIVER_DASHBOARD': {
         // Find Driver Entry to get Area ID
         const driverProfile = drivers.find(d => d.userId === currentUser.id);
@@ -380,13 +363,9 @@ function App() {
           />
         )
       };
-
       case 'SUPERADMIN_DASHBOARD':
         return (
-          <SuperAdminDashboard
-            drivers={drivers}
-            onNavigate={navigateTo}
-          />
+          <SuperAdminDashboard />
         );
       case 'REGISTER':
         return <Register onNavigate={navigateTo} />;
@@ -402,7 +381,6 @@ function App() {
           />
         );
       }
-
       default:
         return <div>Screen {currentScreen} not found</div>;
     }

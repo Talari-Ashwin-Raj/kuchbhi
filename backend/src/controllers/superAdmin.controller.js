@@ -94,4 +94,40 @@ exports.getManagers = async (req, res) => {
   }
 };
 
+exports.approveDriver = async (req, res) => {
+    try {
+        console.log('hello')
+      const { userId } = req.params;
+  
+      await prisma.driver.update({
+        where: { userId },
+        data: { status: 'AVAILABLE' }
+      });
+      console.log('hello1')
+      res.json({ message: 'Driver approved' });
+  
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to approve driver' });
+    }
+  };
+  
+exports.getPendingDrivers = async (req, res) => {
+    try {
+      const drivers = await prisma.driver.findMany({
+        where: { status: 'INACTIVE' },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          },
+          parkingArea: {
+            select: { id: true, name: true }
+          }
+        }
+      });
+      res.json(drivers);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to fetch pending drivers' });
+    }
+  };
 

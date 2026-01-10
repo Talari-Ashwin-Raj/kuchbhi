@@ -1,4 +1,5 @@
-const prisma = require('../config/prisma')
+const prisma = require('../config/prisma');
+const { getParkingAreas } = require('./superAdmin.controller');
 
 getDashboard = async(req,res)=>{
     try{
@@ -38,5 +39,22 @@ postCars = async (req, res) => {
     });
     res.status(201).json(car);
   }
+getParkingAreaByQr = async (req, res) => {
+  try {
+    const { qrCode } = req.params;
 
-module.exports = {getDashboard,getCars,postCars}
+    const area = await prisma.parkingArea.findUnique({
+      where: { qrCode }
+    });
+
+    if (!area) {
+      return res.status(404).json({ error: 'Invalid QR Code' });
+    }
+
+    res.json(area);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to lookup parking area' });
+  }
+};
+module.exports = {getDashboard,getCars,postCars,getParkingAreaByQr}

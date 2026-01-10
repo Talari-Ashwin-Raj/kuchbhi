@@ -1,62 +1,73 @@
 import React, { useEffect, useState } from 'react';
 
-function SuperAdminDashboard({ drivers = [], onApproveDriver }) {
-    const [activeTab, setActiveTab] = useState('AREAS'); // AREAS, MANAGERS, DRIVERS
+function SuperAdminDashboard() {
+    const [activeTab, setActiveTab] = useState('AREAS');
+
     const [parkingAreas, setParkingAreas] = useState([]);
+    const [managers, setManagers] = useState([]);
+    const [pendingDrivers, setPendingDrivers] = useState([]);
+
     const [loadingAreas, setLoadingAreas] = useState(true);
-    // Forms state
+    const [loadingManagers, setLoadingManagers] = useState(true);
+
     const [newManager, setNewManager] = useState({ name: '', email: '', password: '' });
     const [newArea, setNewArea] = useState({ name: '', location: '', qrCode: '', amount: '', managerId: '' });
 
-    // Manager data from backend
-    const [managers, setManagers] = useState([]);
-    const [loadingManagers, setLoadingManagers] = useState(true);
+    const token = localStorage.getItem('authToken');
 
-    /* ---------------- API FUNCTIONS ---------------- */
+    /* ---------------- API CALLS ---------------- */
+
     const fetchParkingAreas = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-
             const res = await fetch('http://localhost:5001/api/superAdmin/parking-areas', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
             });
-            if (!res.ok) return;
+            if (!res.ok) throw new Error();
             const data = await res.json();
             setParkingAreas(data);
         } catch (err) {
-            console.error('Failed to fetch parking areas', err);
+            console.error('Fetch parking areas failed', err);
         } finally {
             setLoadingAreas(false);
         }
     };
+
     const fetchManagers = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-
             const res = await fetch('http://localhost:5001/api/superAdmin/managers', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
             });
+            if (!res.ok) throw new Error();
             const data = await res.json();
             setManagers(data);
         } catch (err) {
-            console.error('Failed to fetch managers', err);
+            console.error('Fetch managers failed', err);
         } finally {
             setLoadingManagers(false);
         }
     };
 
+    const fetchPendingDrivers = async () => {
+        try {
+            const res = await fetch('http://localhost:5001/api/superadmin/pending-drivers', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            setPendingDrivers(data);
+        } catch (err) {
+            console.error('Pending drivers fetch failed', err);
+            alert('Failed to load pending drivers');
+        }
+    };
+
     const addManager = async () => {
         if (!newManager.name || !newManager.email || !newManager.password) {
-            alert('Please fill all fields');
+            alert('Fill all fields');
             return;
         }
-        try {
-            const token = localStorage.getItem('authToken');
 
+        try {
             const res = await fetch('http://localhost:5001/api/superAdmin/managers', {
                 method: 'POST',
                 headers: {
@@ -65,28 +76,24 @@ function SuperAdminDashboard({ drivers = [], onApproveDriver }) {
                 },
                 body: JSON.stringify(newManager)
             });
+
             const data = await res.json();
-            if (!res.ok) {
-                alert(data.error || 'Failed to add manager');
-                return;
-            }
+            if (!res.ok) throw new Error(data.error);
+
             setNewManager({ name: '', email: '', password: '' });
             fetchManagers();
         } catch (err) {
-            console.error('Create manager failed', err);
-            alert('Server error');
+            alert(err.message || 'Failed to add manager');
         }
     };
+
     const createParkingArea = async () => {
-        console.log("Create Area clicked");
         if (!newArea.name || !newArea.location || !newArea.qrCode || !newArea.amount || !newArea.managerId) {
             alert('Fill all fields');
             return;
         }
 
         try {
-            const token = localStorage.getItem('authToken');
-            console.log("Token:", token);
             const res = await fetch('http://localhost:5001/api/superAdmin/parking-areas', {
                 method: 'POST',
                 headers: {
@@ -96,97 +103,95 @@ function SuperAdminDashboard({ drivers = [], onApproveDriver }) {
                 body: JSON.stringify(newArea)
             });
 
-            if (!res.ok) {
-                const err = await res.json();
-                alert(err.error || 'Failed to create area');
-                return;
-            }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
 
             setNewArea({ name: '', location: '', qrCode: '', amount: '', managerId: '' });
             fetchParkingAreas();
-            fetchManagers(); // refresh managers (status changed)
-
+            fetchManagers();
         } catch (err) {
-            console.error('Create area failed', err);
+            alert(err.message || 'Failed to create area');
         }
     };
+
+    const approveDriver = async (userId) => {
+        try {
+            const res = await fetch(`http://localhost:5001/api/superAdmin/approve-driver/${userId}`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+
+            alert('Driver approved');
+            fetchPendingDrivers();
+        } catch (err) {
+            alert(err.message || 'Approval failed');
+        }
+    };
+
     useEffect(() => {
-        fetchManagers();
         fetchParkingAreas();
+        fetchManagers();
+        fetchPendingDrivers();
     }, []);
-    /* ---------------- DERIVED DATA ---------------- */
-    const pendingDrivers = drivers.filter(d => d.status === 'INACTIVE');
+
     const availableManagers = managers.filter(m => m.status === 'PENDING');
-    /* ---------------- STYLES ---------------- */
+
+    /* ---------------- UI ---------------- */
+
     const styles = {
-        container: { padding: '10px' },
-        tabs: { display: 'flex', borderBottom: '1px solid #ddd', marginBottom: '20px' },
-        tab: isActive => ({
+        container: { padding: 10 },
+        tabs: { display: 'flex', borderBottom: '1px solid #ddd', marginBottom: 20 },
+        tab: active => ({
             padding: '10px 20px',
             cursor: 'pointer',
-            borderBottom: isActive ? '2px solid #007bff' : 'none',
-            fontWeight: isActive ? 'bold' : 'normal'
+            borderBottom: active ? '2px solid #007bff' : 'none',
+            fontWeight: active ? 'bold' : 'normal'
         }),
-        card: { backgroundColor: 'white', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: '1px solid #eee' },
-        input: { display: 'block', width: '100%', padding: '8px', marginBottom: '10px', boxSizing: 'border-box' },
-        button: { padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+        card: { background: '#fff', padding: 15, borderRadius: 8, marginBottom: 10, border: '1px solid #eee' },
+        input: { width: '100%', padding: 8, marginBottom: 10 },
+        button: { padding: '8px 16px', background: '#007bff', color: '#fff', border: 'none', borderRadius: 4 }
     };
-    /* ---------------- UI SECTIONS ---------------- */
+
     const renderAreas = () => (
         <div>
-            <h4>Active Parking Areas</h4>
+            <h4>Parking Areas</h4>
 
             {loadingAreas && <p>Loading...</p>}
 
-            {!loadingAreas && parkingAreas.map(area => (
-                <div key={area.id} style={styles.card}>
-                    <strong>{area.name}</strong> ({area.location})
-                    <br />
-                    <small>
-                        Manager: {area.manager?.user?.name || 'Unassigned'}
-                    </small>
+            {parkingAreas.map(a => (
+                <div key={a.id} style={styles.card}>
+                    <b>{a.name}</b> ({a.location})<br />
+                    Manager: {a.manager?.user?.name || 'Unassigned'}
                 </div>
             ))}
 
-            <div style={{ ...styles.card, backgroundColor: '#f9f9f9' }}>
-                <h5>Create New Area</h5>
+            <div style={styles.card}>
+                <h5>Create Area</h5>
 
-                <input style={styles.input} placeholder="Area Name"
-                    value={newArea.name}
-                    onChange={e => setNewArea({ ...newArea, name: e.target.value })}
-                />
+                <input style={styles.input} placeholder="Name" value={newArea.name}
+                    onChange={e => setNewArea({ ...newArea, name: e.target.value })} />
 
-                <input style={styles.input} placeholder="Location"
-                    value={newArea.location}
-                    onChange={e => setNewArea({ ...newArea, location: e.target.value })}
-                />
+                <input style={styles.input} placeholder="Location" value={newArea.location}
+                    onChange={e => setNewArea({ ...newArea, location: e.target.value })} />
 
-                <input style={styles.input} placeholder="QR Code"
-                    value={newArea.qrCode}
-                    onChange={e => setNewArea({ ...newArea, qrCode: e.target.value })}
-                />
+                <input style={styles.input} placeholder="QR Code" value={newArea.qrCode}
+                    onChange={e => setNewArea({ ...newArea, qrCode: e.target.value })} />
 
-                <input style={styles.input} placeholder="Amount"
-                    value={newArea.amount}
-                    onChange={e => setNewArea({ ...newArea, amount: e.target.value })}
-                />
+                <input style={styles.input} placeholder="Amount" value={newArea.amount}
+                    onChange={e => setNewArea({ ...newArea, amount: e.target.value })} />
 
-                <select
-                    style={styles.input}
-                    value={newArea.managerId}
-                    onChange={e => setNewArea({ ...newArea, managerId: e.target.value })}
-                >
-                    <option value="">Select Pending Manager</option>
+                <select style={styles.input} value={newArea.managerId}
+                    onChange={e => setNewArea({ ...newArea, managerId: e.target.value })}>
+                    <option value="">Select Manager</option>
                     {availableManagers.map(m => (
-                        <option key={m.userId} value={m.userId}>
-                            {m.user.name}
-                        </option>
+                        <option key={m.userId} value={m.userId}>{m.user.name}</option>
                     ))}
                 </select>
 
-                <button style={styles.button} onClick={createParkingArea}>
-                    Create Area
-                </button>
+                <button style={styles.button} onClick={createParkingArea}>Create Area</button>
             </div>
         </div>
     );
@@ -195,68 +200,57 @@ function SuperAdminDashboard({ drivers = [], onApproveDriver }) {
         <div>
             <h4>Managers</h4>
 
-            {loadingManagers && <p>Loading managers...</p>}
-            {!loadingManagers && managers.map(m => (
+            {loadingManagers && <p>Loading...</p>}
+
+            {managers.map(m => (
                 <div key={m.userId} style={styles.card}>
-                    <strong>{m.user.name}</strong> <small>({m.status})</small>
+                    {m.user.name} – {m.status}
                 </div>
             ))}
 
-            <div style={{ ...styles.card, backgroundColor: '#f9f9f9' }}>
-                <h5>Add New Manager</h5>
+            <div style={styles.card}>
+                <h5>Add Manager</h5>
 
                 <input style={styles.input} placeholder="Name"
                     value={newManager.name}
-                    onChange={e => setNewManager({ ...newManager, name: e.target.value })}
-                />
+                    onChange={e => setNewManager({ ...newManager, name: e.target.value })} />
 
                 <input style={styles.input} placeholder="Email"
                     value={newManager.email}
-                    onChange={e => setNewManager({ ...newManager, email: e.target.value })}
-                />
+                    onChange={e => setNewManager({ ...newManager, email: e.target.value })} />
 
-                <input style={styles.input} placeholder="Password"
-                    type="password"
+                <input style={styles.input} type="password" placeholder="Password"
                     value={newManager.password}
-                    onChange={e => setNewManager({ ...newManager, password: e.target.value })}
-                />
+                    onChange={e => setNewManager({ ...newManager, password: e.target.value })} />
 
-                <button style={styles.button} onClick={addManager}>
-                    Add Manager
-                </button>
+                <button style={styles.button} onClick={addManager}>Add Manager</button>
             </div>
         </div>
     );
 
     const renderDrivers = () => (
         <div>
-            <h4>Driver Approvals</h4>
+            <h4>Pending Drivers</h4>
 
-            {pendingDrivers.length === 0 ? (
-                <p>No pending approvals.</p>
-            ) : pendingDrivers.map(d => (
+            {pendingDrivers.length === 0 && <p>No pending requests.</p>}
+
+            {pendingDrivers.map(d => (
                 <div key={d.userId} style={styles.card}>
-                    <strong>{d.user?.name}</strong> ({d.user?.email})
-                    <br />
-                    <small>DL: {d.dlNumber}</small>
-                    <br />
-                    <button
-                        style={{ ...styles.button, backgroundColor: '#28a745', marginTop: '10px' }}
-                        onClick={() => onApproveDriver(d.userId)}
-                    >
-                        Approve
-                    </button>
+                    <b>{d.user.name}</b> ({d.user.email})<br />
+                    DL: {d.dlNumber}<br />
+                    Area: {d.parkingArea.name}<br /><br />
+                    <button onClick={() => approveDriver(d.userId)}>Approve</button>
                 </div>
             ))}
         </div>
     );
-    /* ---------------- MAIN RENDER ---------------- */
+
     return (
         <div style={styles.container}>
             <h3>Super Admin Panel</h3>
 
             <div style={styles.tabs}>
-                <div style={styles.tab(activeTab === 'AREAS')} onClick={() => setActiveTab('AREAS')}>Parking Areas</div>
+                <div style={styles.tab(activeTab === 'AREAS')} onClick={() => setActiveTab('AREAS')}>Areas</div>
                 <div style={styles.tab(activeTab === 'MANAGERS')} onClick={() => setActiveTab('MANAGERS')}>Managers</div>
                 <div style={styles.tab(activeTab === 'DRIVERS')} onClick={() => setActiveTab('DRIVERS')}>Drivers</div>
             </div>
@@ -267,5 +261,7 @@ function SuperAdminDashboard({ drivers = [], onApproveDriver }) {
         </div>
     );
 }
+
 export default SuperAdminDashboard;
+
 
