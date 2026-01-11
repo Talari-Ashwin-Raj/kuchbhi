@@ -16,94 +16,48 @@ function LoginScreen({ onLogin, onNavigate }) {
         }
     };
 
-    const styles = {
-        container: {
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            backgroundColor: '#f0f2f5',
-            padding: '20px',
-        },
-        card: {
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            width: '100%',
-            maxWidth: '350px',
-        },
-        input: {
-            width: '100%',
-            padding: '10px',
-            marginBottom: '15px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            boxSizing: 'border-box',
-        },
-        button: {
-            width: '100%',
-            padding: '10px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px',
-        },
-        error: {
-            color: 'red',
-            marginBottom: '10px',
-            fontSize: '14px',
-        },
-        link: {
-            marginTop: '15px',
-            fontSize: '14px',
-            color: '#007bff',
-            cursor: 'pointer',
-            textAlign: 'center',
-        },
-        testcreds: {
-            marginTop: '20px',
-            padding: '10px',
-            backgroundColor: '#e9ecef',
-            borderRadius: '4px',
-            fontSize: '12px',
-            color: '#333'
-        }
-    };
-
     return (
-        <div style={styles.container}>
-            <div style={styles.card}>
-                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Parking App Login</h2>
-                {error && <div style={styles.error}>{error}</div>}
+        <div className="center-screen">
+            <div className="card auth-card slide-up">
+                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>Parking App Login</h2>
+
+                {error && (
+                    <div style={{ color: 'var(--error-color)', marginBottom: '1rem', textAlign: 'center', fontWeight: '500' }}>
+                        {error}
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px' }}>Email</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email</label>
                         <input
                             type="email"
-                            style={styles.input}
+                            className="input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="user@test.com"
                         />
                     </div>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '5px' }}>Password</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Password</label>
                         <input
                             type="password"
-                            style={styles.input}
+                            className="input"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="123"
+                            placeholder="••••••"
                         />
                     </div>
-                    <button type="submit" style={styles.button}>Login</button>
+                    <button type="submit" className="btn btn-primary btn-block" style={{ padding: '0.75rem', fontSize: '1.1rem' }}>
+                        Login
+                    </button>
                 </form>
-                <div style={styles.link} onClick={() => onNavigate('REGISTER')}>
-                    Don't have an account? Register
+
+                <div
+                    style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--primary-color)', cursor: 'pointer' }}
+                    onClick={() => onNavigate('REGISTER')}
+                >
+                    Don't have an account? <strong>Register</strong>
                 </div>
             </div>
         </div>
