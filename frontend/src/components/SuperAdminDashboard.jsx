@@ -19,7 +19,7 @@ function SuperAdminDashboard() {
 
     const fetchParkingAreas = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/superAdmin/parking-areas', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superAdmin/parking-areas`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error();
@@ -34,7 +34,7 @@ function SuperAdminDashboard() {
 
     const fetchManagers = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/superAdmin/managers', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superAdmin/managers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error();
@@ -49,7 +49,7 @@ function SuperAdminDashboard() {
 
     const fetchPendingDrivers = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/superadmin/pending-drivers', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superadmin/pending-drivers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) throw new Error();
@@ -68,7 +68,7 @@ function SuperAdminDashboard() {
         }
 
         try {
-            const res = await fetch('http://localhost:5001/api/superAdmin/managers', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superAdmin/managers`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ function SuperAdminDashboard() {
         }
 
         try {
-            const res = await fetch('http://localhost:5001/api/superAdmin/parking-areas', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superAdmin/parking-areas`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ function SuperAdminDashboard() {
 
     const approveDriver = async (userId) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/superAdmin/approve-driver/${userId}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/superAdmin/approve-driver/${userId}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });

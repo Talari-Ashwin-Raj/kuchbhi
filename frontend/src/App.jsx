@@ -68,7 +68,7 @@ function App() {
       const token = localStorage.getItem('authToken');
       if (!token) return;
 
-      const res = await fetch('http://localhost:5001/api/user/cars', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/cars`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -86,7 +86,7 @@ function App() {
     try {
       const token = localStorage.getItem('authToken');
 
-      const res = await fetch('http://localhost:5001/api/user/cars', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/cars`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ function App() {
   // --- AUTHENTICATION ---
   const handleLogin = async (email, password) => {
     try {
-      const response = await fetch('http://localhost:5001/api/auth/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -219,7 +219,7 @@ function App() {
       const token = localStorage.getItem('authToken');
 
       const res = await fetch(
-        `http://localhost:5001/api/user/parking-area-by-qr/${qrCode}`,
+        `${import.meta.env.VITE_API_URL}/api/user/parking-area-by-qr/${qrCode}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -251,7 +251,7 @@ function App() {
   const handlePaymentSuccess = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:5001/api/user/create-ticket', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/create-ticket`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

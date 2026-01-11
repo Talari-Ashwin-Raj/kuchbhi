@@ -13,7 +13,7 @@ function Dashboard({ user, activeTicket, onNavigate }) {
     const fetchTickets = async () => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch('http://localhost:5001/api/user/dashboard', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/dashboard`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -42,7 +42,7 @@ function Dashboard({ user, activeTicket, onNavigate }) {
     const requestRetrieval = async (ticketNo) => {
         try {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`http://localhost:5001/api/user/request-retrieval/${ticketNo}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/user/request-retrieval/${ticketNo}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });

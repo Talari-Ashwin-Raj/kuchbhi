@@ -13,7 +13,7 @@ function DriverDashboard({ user }) {
 
     const fetchProfile = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/driver/dashboard', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/driver/dashboard`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) {
@@ -30,7 +30,7 @@ function DriverDashboard({ user }) {
 
     const fetchRequests = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/driver/requests', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/driver/requests`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (!res.ok) {
@@ -48,7 +48,7 @@ function DriverDashboard({ user }) {
     const acceptRequest = async (requestId) => {
         try {
             const res = await fetch(
-                `http://localhost:5001/api/driver/accept-request/${requestId}`,
+                `${import.meta.env.VITE_API_URL}/api/driver/accept-request/${requestId}`,
                 {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` }
@@ -70,7 +70,7 @@ function DriverDashboard({ user }) {
 
     const parkCar = async (ticketNo) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/driver/park/${ticketNo}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/driver/park/${ticketNo}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -83,7 +83,7 @@ function DriverDashboard({ user }) {
 
     const completeJob = async (ticketNo) => {
         try {
-            const res = await fetch(`http://localhost:5001/api/driver/complete/${ticketNo}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/driver/complete/${ticketNo}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
             });

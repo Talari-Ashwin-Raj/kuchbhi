@@ -9,7 +9,7 @@ function ManagerDashboard({ user }) {
 
     const fetchDashboard = async () => {
         try {
-            const res = await fetch('http://localhost:5001/api/manager/dashboard', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/dashboard`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -36,7 +36,7 @@ function ManagerDashboard({ user }) {
     const submitDriverRequest = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('http://localhost:5001/api/manager/request-driver', {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/manager/request-driver`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
