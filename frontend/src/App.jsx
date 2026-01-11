@@ -18,18 +18,14 @@ import SuperAdminDashboard from './components/SuperAdminDashboard';
 
 const INITIAL_USERS = [];
 const INITIAL_AREAS = [];
-const INITIAL_DRIVERS = [{ id: "driver_1", name: "Driver 1", email: "driver1@gmail.com", phone: "1234567890", status: "AVAILABLE" }];
 const INITIAL_CARS = [];
 const INITIAL_TICKETS = [];
-const INITIAL_REQUESTS = [];
 
 function App() {
   // --- CENTRALIZED STATE (Simulating Backend) ---
   const [scannedArea, setScannedArea] = useState(null);
-  const [drivers, setDrivers] = useState(INITIAL_DRIVERS);
   const [cars, setCars] = useState(INITIAL_CARS);
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
-  const [driverRequests, setDriverRequests] = useState(INITIAL_REQUESTS);
 
   // --- APP STATE ---
   const [currentUser, setCurrentUser] = useState(null); // The logged-in User object
@@ -363,20 +359,9 @@ function App() {
       case 'MANAGER_DASHBOARD':
         return <ManagerDashboard user={currentUser} />;
       case 'DRIVER_DASHBOARD': {
-        // Find Driver Entry to get Area ID
-        const driverProfile = drivers.find(d => d.userId === currentUser.id);
-        // BROADCASST FILTER: status PENDING + same Area
-        const areaRequests = driverRequests.filter(r =>
-          r.status === 'PENDING' &&
-          r.parkingAreaId === driverProfile?.parkingAreaId
-        );
         return (
           <DriverDashboard
             user={currentUser}
-            driverProfile={driverProfile}
-            requests={areaRequests}
-            onAccept={handleAcceptRequest}
-            onNavigate={navigateTo}
           />
         )
       };
