@@ -25,9 +25,37 @@ exports.getDashboard = async (req, res) => {
         include: { ticket: true },
         orderBy: { createdAt: 'desc' }
       });
+      activeRequest = await prisma.driverRequest.findFirst({
+        where: {
+          driverId: req.user.id,
+          status: 'APPROVED',
+          ticket: {
+            status: {
+              not: 'COMPLETED'
+            }
+          }
+        },
+        include: { ticket: true },
+        orderBy: { createdAt: 'desc' }
+      });
     }
 
-    res.json({ ...driver, activeRequest: activeRequest || null });
+    // DAILY COUNT LOGIC
+    // Requests created >= start of today AND status = APPROVED
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const dailyCount = await prisma.driverRequest.count({
+      where: {
+        driverId: req.user.id,
+        status: 'APPROVED',
+        createdAt: {
+          gte: startOfDay
+        }
+      }
+    });
+
+    res.json({ ...driver, activeRequest: activeRequest || null, dailyCount });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch profile' });
   }

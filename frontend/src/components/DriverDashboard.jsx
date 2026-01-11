@@ -151,6 +151,7 @@ function DriverDashboard({ user }) {
             <h3>Hello, {driverProfile.user.name}</h3>
             <p>Status: {driverProfile.status}</p>
             <p>Area: {driverProfile.parkingAreaId}</p>
+            <p>Today's Jobs: <b>{driverProfile.dailyCount || 0}</b></p>
 
             <hr />
 
