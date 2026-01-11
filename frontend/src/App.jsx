@@ -229,32 +229,31 @@ function App() {
   //   resolve();
   // });
 
-  const handlePaymentSuccess = () => {
-    // 1. Create Ticket
-    const newTicket = {
-      ticketNumber: `TKT-${Date.now()}`,
-      status: 'CALLED', // waiting for driver
-      carId: bookingFlow.carId, // USE BOOKING FLOW
-      createdAt: new Date().toISOString(),
-      userId: currentUser.id,
-      parkingAreaId: bookingFlow.parkingAreaId // USE BOOKING FLOW
-    };
+  const handlePaymentSuccess = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('http://localhost:5001/api/user/create-ticket', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          carId: bookingFlow.carId,
+          parkingAreaId: bookingFlow.parkingAreaId
+        })
+      });
 
-    // 2. Create Driver Request (Broadcast to Area)
-    const newRequest = {
-      id: `REQ-${Date.now()}`,
-      requestType: 'PARKING',
-      ticketNo: newTicket.ticketNumber,
-      driverId: null, // Broadcast
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-      parkingAreaId: bookingFlow.parkingAreaId // USE BOOKING FLOW
-    };
+      if (!res.ok) throw new Error('Payment/Ticket creation failed');
+      const newTicket = await res.json();
 
-    setTickets([...tickets, newTicket]);
-    setDriverRequests([...driverRequests, newRequest]);
-    setActiveTicket(newTicket);
-    navigateTo('TICKET_DISPLAY');
+      setTickets([newTicket, ...tickets]);
+      setActiveTicket(newTicket);
+      navigateTo('TICKET_DISPLAY');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate ticket. Please try again.');
+    }
   };
 
   // --- BUSINESS LOGIC: DRIVER ---

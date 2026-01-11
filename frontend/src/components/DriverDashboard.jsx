@@ -51,6 +51,32 @@ function DriverDashboard({ user }) {
         }
     };
 
+    const parkCar = async (ticketNo) => {
+        try {
+            const res = await fetch(`http://localhost:5001/api/driver/park/${ticketNo}`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to park');
+            alert('Car Parked!');
+            fetchProfile();
+            fetchRequests();
+        } catch (err) { alert(err.message); }
+    };
+
+    const completeJob = async (ticketNo) => {
+        try {
+            const res = await fetch(`http://localhost:5001/api/driver/complete/${ticketNo}`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to complete');
+            alert('Job Completed! Car Retrieved.');
+            fetchProfile();
+            fetchRequests();
+        } catch (err) { alert(err.message); }
+    };
+
     /* ---------------- LOAD DATA ---------------- */
 
     useEffect(() => {
@@ -96,7 +122,26 @@ function DriverDashboard({ user }) {
             <div style={styles.container}>
                 <h3>Driver Dashboard</h3>
                 <p>Status: {driverProfile.status}</p>
-                <p>You are currently busy.</p>
+
+                {driverProfile.activeRequest && (
+                    <div style={{ padding: 20, backgroundColor: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 8 }}>
+                        <h4>Active Job: {driverProfile.activeRequest.requestType}</h4>
+                        <p>Ticket: {driverProfile.activeRequest.ticketNo}</p>
+                        <p>Car: {driverProfile.activeRequest.ticket?.cars?.plateNumber || 'See Ticket Details'}</p>
+
+                        {driverProfile.activeRequest.requestType === 'PARKING' ? (
+                            <button style={styles.button} onClick={() => parkCar(driverProfile.activeRequest.ticketNo)}>
+                                PARK CAR
+                            </button>
+                        ) : (
+                            <button style={styles.button} onClick={() => completeJob(driverProfile.activeRequest.ticketNo)}>
+                                COMPLETE RETRIEVAL
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {!driverProfile.activeRequest && <p>You are marked as BUSY but have no active request. Please contact admin.</p>}
             </div>
         );
     }

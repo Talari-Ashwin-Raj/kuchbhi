@@ -4,14 +4,7 @@ function MakePayment({ onNavigate, onPay, amount }) {
     const [isProcessing, setIsProcessing] = useState(false);
 
 
-    const handlePayment = () => {
-        setIsProcessing(true);
-        // Simulate API call
-        setTimeout(() => {
-            setIsProcessing(false);
-            onPay(); // Triggers ticket generation and navigation
-        }, 1500);
-    };
+
 
     const styles = {
         container: {
@@ -69,7 +62,11 @@ function MakePayment({ onNavigate, onPay, amount }) {
 
             <button
                 style={{ ...styles.button, backgroundColor: isProcessing ? '#6c757d' : '#28a745' }}
-                onClick={handlePayment}
+                onClick={async () => {
+                    setIsProcessing(true);
+                    await onPay();
+                    setIsProcessing(false);
+                }}
                 disabled={isProcessing}
             >
                 {isProcessing ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
