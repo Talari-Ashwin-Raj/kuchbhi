@@ -21,28 +21,36 @@ exports.getDashboard = async (req, res) => {
 }
 
 exports.getCars = async (req, res) => {
-  const cars = await prisma.car.findMany({
-    where: { userId: req.user.id }
-  });
+  try {
+    const cars = await prisma.car.findMany({
+      where: { userId: req.user.id }
+    });
 
-  res.json(cars);
+    res.json(cars);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch cars' });
+  }
 }
 
 exports.postCars = async (req, res) => {
-  const { plateNumber, brand, model, color } = req.body;
-  if (!plateNumber || !brand || !model || !color) {
-    return res.status(400).json({ error: 'All fields required' });
-  }
-  const car = await prisma.car.create({
-    data: {
-      plateNumber,
-      brand,
-      model,
-      color,
-      userId: req.user.id // derived from token
+  try {
+    const { plateNumber, brand, model, color } = req.body;
+    if (!plateNumber || !brand || !model || !color) {
+      return res.status(400).json({ error: 'All fields required' });
     }
-  });
-  res.status(201).json(car);
+    const car = await prisma.car.create({
+      data: {
+        plateNumber,
+        brand,
+        model,
+        color,
+        userId: req.user.id // derived from token
+      }
+    });
+    res.status(201).json(car);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add car' });
+  }
 }
 
 exports.getParkingAreaByQr = async (req, res) => {

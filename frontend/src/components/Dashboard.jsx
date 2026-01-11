@@ -56,62 +56,44 @@ function Dashboard({ user, activeTicket, onNavigate }) {
     };
 
     const styles = {
-        container: { padding: '10px' },
-        welcome: { fontSize: '20px', marginBottom: '20px' },
-        actionButton: {
-            width: '100%',
-            padding: '15px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '18px',
-            marginBottom: '20px',
-            cursor: 'pointer',
-        },
-        activeTicketBanner: {
-            backgroundColor: '#ffc107',
-            padding: '15px',
-            borderRadius: '8px',
-            marginBottom: '20px',
-            cursor: 'pointer',
-        },
-        sectionTitle: {
-            fontSize: '16px',
-            fontWeight: 'bold',
-            marginBottom: '10px',
-        },
-        bookingCard: {
-            backgroundColor: 'white',
-            padding: '15px',
-            borderRadius: '8px',
-            marginBottom: '10px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        },
-        muted: {
-            fontSize: '14px',
-            color: '#666'
-        }
+        // Keeping container for structural padding if needed, but classes preferred
     };
+
+    // Guard against missing user
+    if (!user) return <div className="container" style={{ padding: 20 }}>Loading user profile...</div>;
+
     return (
-        <div style={styles.container}>
-            <h2 style={styles.welcome}>
-                Welcome, {user?.name || 'User'}!
+        <div className="container" style={{ padding: '20px' }}>
+            <h2 style={{ marginBottom: '20px' }}>
+                Welcome, {user.name || 'User'}!
             </h2>
 
             {/* ACTIVE TICKET */}
             {currentActive && (
                 <div
-                    style={styles.activeTicketBanner}
+                    className="card"
+                    style={{
+                        backgroundColor: '#fff3cd',
+                        borderColor: '#ffeeba',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap'
+                    }}
                     onClick={() => onNavigate('TICKET_DISPLAY')}
                 >
-                    <strong>🎫 Active Ticket</strong>
-                    <div style={styles.muted}>
-                        Status: {currentActive.status}
+                    <div>
+                        <strong style={{ fontSize: '1.1rem' }}>🎫 Active Ticket</strong>
+                        <div style={{ color: '#856404', marginTop: '5px' }}>
+                            Status: <span style={{ fontWeight: 'bold' }}>{currentActive.status}</span>
+                        </div>
                     </div>
+
                     {currentActive.status === 'PARKED' && (
                         <button
-                            style={{ ...styles.actionButton, marginTop: 10, backgroundColor: '#007bff' }}
+                            className="btn btn-primary"
+                            style={{ marginTop: '10px' }}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 requestRetrieval(currentActive.ticketNumber);
@@ -123,34 +105,51 @@ function Dashboard({ user, activeTicket, onNavigate }) {
                 </div>
             )}
 
+            {/* ERROR / INFO MESSAGE if no active and no history */}
+            {!currentActive && pastTickets.length === 0 && !loading && (
+                <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
+                    <p>You have no active tickets and no history.</p>
+                </div>
+            )}
+
             {/* SCAN QR */}
             <button
-                style={styles.actionButton}
+                className="btn btn-primary btn-block"
+                style={{ padding: '20px', fontSize: '1.2rem', marginBottom: '30px' }}
                 onClick={() => onNavigate('SCAN_QR')}
             >
                 📸 Scan QR Code
             </button>
 
             {/* PREVIOUS BOOKINGS */}
-            <h3 style={styles.sectionTitle}>Previous Bookings</h3>
+            <h3 style={{ marginBottom: '15px' }}>Previous Bookings</h3>
 
             {loading && <p>Loading bookings...</p>}
 
             {!loading && pastTickets.length === 0 && (
-                <p style={styles.muted}>No previous bookings</p>
+                <p style={{ color: '#666' }}>No previous bookings found.</p>
             )}
 
-            {!loading && pastTickets.map(ticket => (
-                <div key={ticket.id} style={styles.bookingCard}>
-                    <div><strong>{ticket.parkingArea?.name || 'Parking Area'}</strong></div>
-                    <div style={styles.muted}>
-                        {new Date(ticket.createdAt).toLocaleString()}
+            <div className="grid">
+                {!loading && pastTickets.map(ticket => (
+                    <div key={ticket.id} className="card">
+                        <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{ticket.parkingArea?.name || 'Parking Area'}</div>
+                        <div style={{ color: '#666', fontSize: '0.9rem', margin: '5px 0' }}>
+                            {new Date(ticket.createdAt).toLocaleString()}
+                        </div>
+                        <div style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#e2e3e5',
+                            fontSize: '0.85rem',
+                            marginTop: '5px'
+                        }}>
+                            Status: {ticket.status}
+                        </div>
                     </div>
-                    <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                        Status: {ticket.status}
-                    </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }

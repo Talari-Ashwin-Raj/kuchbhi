@@ -43,13 +43,21 @@ function App() {
 
   /* ----------- RESTORE SESSION (IMPORTANT) ----------- */
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const savedUser = localStorage.getItem('currentUser');
-    const savedScreen = localStorage.getItem('currentScreen');
-    if (token && savedUser && savedScreen) {
-      setCurrentUser(JSON.parse(savedUser));
-      setHistory([savedScreen])
-      setCurrentScreen(savedScreen)
+    try {
+      const token = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('currentUser');
+      const savedScreen = localStorage.getItem('currentScreen');
+      if (token && savedUser && savedScreen) {
+        const parsedUser = JSON.parse(savedUser);
+        if (parsedUser) {
+          setCurrentUser(parsedUser);
+          setHistory([savedScreen]);
+          setCurrentScreen(savedScreen);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to restore session:", e);
+      localStorage.clear(); // Clear corrupted session
     }
   }, []);
   console.log(currentUser);
@@ -155,9 +163,14 @@ function App() {
       });
 
       if (!response.ok) {
-        const errData = await response.json();
+        let errData = {};
+        try {
+          errData = await response.json();
+        } catch (e) {
+          errData = { error: 'Server error' };
+        }
         console.log(errData);
-        return { success: false, message: errData.error };
+        return { success: false, message: errData.error || 'Login failed' };
       }
 
       const data = await response.json();
@@ -219,7 +232,7 @@ function App() {
 
     } catch (err) {
       console.error(err);
-      alert('Server error while scanning QR');
+      alert('Server error while scanning QR: ' + (err.message || 'Unknown error'));
     }
   };
 

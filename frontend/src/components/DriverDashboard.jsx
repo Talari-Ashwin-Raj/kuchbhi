@@ -3,29 +3,46 @@ import React, { useEffect, useState } from 'react';
 function DriverDashboard({ user }) {
 
     const [driverProfile, setDriverProfile] = useState(null);
-    const [requests, setRequests] = useState([]);
+    const [requests, setRequests] = useState([]); // Default to empty array
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const token = localStorage.getItem('authToken');
 
     /* ---------------- FETCH FUNCTIONS ---------------- */
 
     const fetchProfile = async () => {
-        const res = await fetch('http://localhost:5001/api/driver/dashboard', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        setDriverProfile(data);
+        try {
+            const res = await fetch('http://localhost:5001/api/driver/dashboard', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to fetch profile');
+            }
+            const data = await res.json();
+            setDriverProfile(data);
+        } catch (e) {
+            console.error(e);
+            setError(e.message);
+        }
     };
 
     const fetchRequests = async () => {
-        const res = await fetch('http://localhost:5001/api/driver/requests', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        setRequests(data);
+        try {
+            const res = await fetch('http://localhost:5001/api/driver/requests', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Failed to fetch requests');
+            }
+            const data = await res.json();
+            setRequests(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+            // Don't block whole UI for requests failure, just log or show validation
+        }
     };
 
     const acceptRequest = async (requestId) => {
@@ -39,7 +56,7 @@ function DriverDashboard({ user }) {
             );
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) throw new Error(data.error || 'Accept failed');
 
             alert('Job accepted');
 
@@ -47,7 +64,7 @@ function DriverDashboard({ user }) {
             fetchRequests();
 
         } catch (err) {
-            alert(err.message);
+            alert(err.message || 'Something went wrong');
         }
     };
 
@@ -81,12 +98,18 @@ function DriverDashboard({ user }) {
 
     useEffect(() => {
         const load = async () => {
+            setLoading(true);
             try {
-                await fetchProfile();
-                await fetchRequests();
+                // If no token, maybe redirect? But preserving logic.
+                if (token) {
+                    await fetchProfile();
+                    await fetchRequests();
+                } else {
+                    setError("No auth token found");
+                }
             } catch (err) {
                 console.error(err);
-                alert('Failed to load driver dashboard');
+                setError('Failed to load driver dashboard');
             } finally {
                 setLoading(false);
             }
@@ -96,83 +119,73 @@ function DriverDashboard({ user }) {
 
     /* ---------------- UI ---------------- */
 
-    if (loading) return <p style={{ padding: 20 }}>Loading...</p>;
+    if (loading) return <div className="container" style={{ padding: 20 }}>Loading driver details...</div>;
+    if (error) return <div className="container" style={{ padding: 20, color: 'var(--error-color)' }}>Error: {error}</div>;
+    if (!driverProfile || !driverProfile.user) return <div className="container">Driver profile not found.</div>;
 
-    const styles = {
-        container: { padding: '20px' },
-        requestCard: {
-            backgroundColor: '#fff3cd',
-            border: '1px solid #ffeeba',
-            padding: '15px',
-            borderRadius: '8px',
-            marginBottom: '15px'
-        },
-        button: {
-            padding: '8px 16px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-        }
-    };
-
-    if (driverProfile.status !== 'AVAILABLE') {
-        return (
-            <div style={styles.container}>
-                <h3>Driver Dashboard</h3>
-                <p>Status: {driverProfile.status}</p>
-
-                {driverProfile.activeRequest && (
-                    <div style={{ padding: 20, backgroundColor: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 8 }}>
-                        <h4>Active Job: {driverProfile.activeRequest.requestType}</h4>
-                        <p>Ticket: {driverProfile.activeRequest.ticketNo}</p>
-                        <p>Car: {driverProfile.activeRequest.ticket?.cars?.plateNumber || 'See Ticket Details'}</p>
-
-                        {driverProfile.activeRequest.requestType === 'PARKING' ? (
-                            <button style={styles.button} onClick={() => parkCar(driverProfile.activeRequest.ticketNo)}>
-                                PARK CAR
-                            </button>
-                        ) : (
-                            <button style={styles.button} onClick={() => completeJob(driverProfile.activeRequest.ticketNo)}>
-                                COMPLETE RETRIEVAL
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {!driverProfile.activeRequest && <p>You are marked as BUSY but have no active request. Please contact admin.</p>}
-            </div>
-        );
-    }
+    // Using CSS classes while keeping functional inline styles where absolutely necessary for specific overrides
+    // Moving styles to class logic but keeping the structure
 
     return (
-        <div style={styles.container}>
-            <h3>Hello, {driverProfile.user.name}</h3>
-            <p>Status: {driverProfile.status}</p>
-            <p>Area: {driverProfile.parkingAreaId}</p>
-            <p>Today's Jobs: <b>{driverProfile.dailyCount || 0}</b></p>
+        <div className="container" style={{ padding: '20px' }}>
+            <h2>Hello, {driverProfile.user.name}</h2>
+            <div className="card">
+                <p><strong>Status:</strong> <span style={{ color: driverProfile.status === 'AVAILABLE' ? 'var(--success-color)' : 'var(--warning-color)', fontWeight: 'bold' }}>{driverProfile.status}</span></p>
+                <p><strong>Area:</strong> {driverProfile.parkingAreaId}</p>
+                <p><strong>Today's Jobs:</strong> {driverProfile.dailyCount || 0}</p>
+            </div>
 
-            <hr />
+            <hr style={{ margin: '20px 0', border: '0', borderTop: '1px solid #eee' }} />
 
-            <h4>Incoming Requests ({requests.length})</h4>
+            {/* ERROR HANDLING: Guard driverProfile.activeRequest access completely */}
+            {driverProfile.status !== 'AVAILABLE' && (
+                <div style={{ marginBottom: '20px' }}>
+                    <h3>Current Status</h3>
+                    {driverProfile.activeRequest ? (
+                        <div className="card" style={{ backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }}>
+                            <h4 style={{ color: '#0369a1' }}>Active Job: {driverProfile.activeRequest.requestType}</h4>
+                            <p>Ticket: {driverProfile.activeRequest.ticketNo}</p>
+                            <p>Car: {driverProfile.activeRequest.ticket?.cars?.plateNumber || 'See Ticket Details'}</p>
 
-            {requests.length === 0 && <p>No pending requests.</p>}
-
-            {requests.map(req => (
-                <div key={req.id} style={styles.requestCard}>
-                    <div><b>Type:</b> {req.requestType}</div>
-                    <div><b>Ticket:</b> {req.ticketNo}</div>
-                    <div><b>Time:</b> {new Date(req.createdAt).toLocaleTimeString()}</div>
-
-                    <button
-                        style={styles.button}
-                        onClick={() => acceptRequest(req.id)}
-                    >
-                        ACCEPT JOB
-                    </button>
+                            <div style={{ marginTop: '10px' }}>
+                                {driverProfile.activeRequest.requestType === 'PARKING' ? (
+                                    <button className="btn btn-primary" onClick={() => parkCar(driverProfile.activeRequest.ticketNo)}>
+                                        PARK CAR
+                                    </button>
+                                ) : (
+                                    <button className="btn btn-primary" onClick={() => completeJob(driverProfile.activeRequest.ticketNo)}>
+                                        COMPLETE RETRIEVAL
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="card" style={{ backgroundColor: '#fff3cd' }}>You are marked as BUSY but have no active request. Please contact admin.</p>
+                    )}
                 </div>
-            ))}
+            )}
+
+            <h3>Incoming Requests ({requests.length})</h3>
+
+            {(!requests || requests.length === 0) && <p>No pending requests.</p>}
+
+            <div className="grid">
+                {(requests || []).map(req => (
+                    <div key={req.id} className="card" style={{ borderLeft: '4px solid var(--warning-color)' }}>
+                        <div><b>Type:</b> {req.requestType}</div>
+                        <div><b>Ticket:</b> {req.ticketNo}</div>
+                        <div><b>Time:</b> {new Date(req.createdAt).toLocaleTimeString()}</div>
+
+                        <button
+                            className="btn btn-primary"
+                            style={{ marginTop: '10px' }}
+                            onClick={() => acceptRequest(req.id)}
+                        >
+                            ACCEPT JOB
+                        </button>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }

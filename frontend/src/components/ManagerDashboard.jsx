@@ -58,14 +58,16 @@ function ManagerDashboard({ user }) {
         }
     };
 
-    if (!managerData) return <p>Loading...</p>;
+    if (!managerData) return <div className="container" style={{ padding: 20 }}>Loading manager dashboard...</div>;
 
     if (!managerData.area) {
         return (
-            <div>
-                <h3>Welcome {user.name}</h3>
+            <div className="container" style={{ padding: 20 }}>
+                <h3>Welcome {user?.name}</h3>
                 <p>Status: {managerData.status}</p>
-                <p>No parking area assigned yet.</p>
+                <div className="card" style={{ marginTop: 20, backgroundColor: '#fff3cd' }}>
+                    <p>No parking area assigned yet. Please contact Super Admin.</p>
+                </div>
             </div>
         );
     }
@@ -73,34 +75,44 @@ function ManagerDashboard({ user }) {
     const area = managerData.area;
 
     return (
-        <div style={{ padding: 20 }}>
-            <h3>{area.name}</h3>
-            <p><b>Location:</b> {area.location}</p>
-            <p><b>Rate:</b> ₹{area.amount}</p>
+        <div className="container" style={{ padding: '20px' }}>
+            <h2>{area.name}</h2>
+            <div className="card" style={{ marginBottom: '20px' }}>
+                <p><b>Location:</b> {area.location}</p>
+                <p><b>Rate:</b> ₹{area.amount}/hr</p>
+                <p><b>Status:</b> {managerData.status}</p>
+            </div>
 
-            <h4>Drivers</h4>
-
-            {(!area.drivers || area.drivers.length === 0) && <p>No drivers yet.</p>}
-
-            {area.drivers?.map(d => (
-                <div key={d.userId} style={{ border: '1px solid #ccc', padding: 8, marginBottom: 6 }}>
-                    {d.user?.name} – {d.status}
-                </div>
-            ))}
-
-            <button onClick={() => setShowAddDriver(!showAddDriver)}>
-                {showAddDriver ? 'Cancel' : 'Request New Driver'}
-            </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3>Drivers</h3>
+                <button className="btn btn-primary" onClick={() => setShowAddDriver(!showAddDriver)}>
+                    {showAddDriver ? 'Cancel' : 'Request New Driver'}
+                </button>
+            </div>
 
             {showAddDriver && (
-                <form onSubmit={submitDriverRequest} style={{ marginTop: 10 }}>
-                    <input placeholder="Name" required onChange={e => setNewDriver({ ...newDriver, name: e.target.value })} />
-                    <input placeholder="Email" required onChange={e => setNewDriver({ ...newDriver, email: e.target.value })} />
-                    <input placeholder="Password" required type="password" onChange={e => setNewDriver({ ...newDriver, password: e.target.value })} />
-                    <input placeholder="DL Number" required onChange={e => setNewDriver({ ...newDriver, dlNumber: e.target.value })} />
-                    <button type="submit">Send Request</button>
-                </form>
+                <div className="card" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
+                    <h4>New Driver Request</h4>
+                    <form onSubmit={submitDriverRequest} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <input className="input" placeholder="Name" required onChange={e => setNewDriver({ ...newDriver, name: e.target.value })} style={{ padding: '10px' }} />
+                        <input className="input" placeholder="Email" required onChange={e => setNewDriver({ ...newDriver, email: e.target.value })} style={{ padding: '10px' }} />
+                        <input className="input" placeholder="Password" required type="password" onChange={e => setNewDriver({ ...newDriver, password: e.target.value })} style={{ padding: '10px' }} />
+                        <input className="input" placeholder="DL Number" required onChange={e => setNewDriver({ ...newDriver, dlNumber: e.target.value })} style={{ padding: '10px' }} />
+                        <button className="btn btn-primary" type="submit">Send Request</button>
+                    </form>
+                </div>
             )}
+
+            {(!area.drivers || area.drivers.length === 0) && <p>No drivers assigned yet.</p>}
+
+            <div className="grid">
+                {area.drivers?.map(d => (
+                    <div key={d.userId} className="card">
+                        <div style={{ fontWeight: 'bold' }}>{d.user?.name || 'Unknown Driver'}</div>
+                        <div>Status: <span style={{ color: d.status === 'AVAILABLE' ? 'var(--success-color)' : 'var(--warning-color)', fontWeight: 'bold' }}>{d.status}</span></div>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
