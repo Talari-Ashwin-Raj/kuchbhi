@@ -1,108 +1,168 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode } from "html5-qrcode";
 
 function ScanQR({ onScanSuccess, onCancel }) {
-    // Internal state for the scanner UI (e.g. simulating camera loading)
-    const [scanning, setScanning] = useState(true);
+    const [isCameraActive, setIsCameraActive] = useState(false);
+    const [error, setError] = useState(null);
+    const scannerRef = useRef(null);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (scannerRef.current) {
+                scannerRef.current.stop().then(() => {
+                    scannerRef.current.clear();
+                    scannerRef.current = null;
+                }).catch(err => {
+                    // Ignore "not running" errors during cleanup
+                    console.warn("Scanner cleanup warn:", err);
+                });
+            }
+        };
+    }, []);
 
     const handleSimulateScan = () => {
-        // In a real implementation, this would come from a library like react-qr-reader
-        // For now, we simulate finding a valid ParkingArea QR code.
-        // Schema requires a 'qrCode' string.
         const mockQRCode = "dummyQR1";
-
-        // STRICT RULE: No navigation here. Just verify data availability and callback.
         if (onScanSuccess) {
             onScanSuccess(mockQRCode);
         }
     };
 
-    const styles = {
-        container: {
-            flex: 1,
+    const startCameraScan = () => {
+        setIsCameraActive(true);
+        setError(null);
+        console.log("Initializing camera scanner...");
+
+        // Slight delay to ensure DOM element exists
+        setTimeout(() => {
+            if (!document.getElementById("reader")) {
+                console.error("Reader element not found!");
+                setError("Scanner UI error. Please try again.");
+                setIsCameraActive(false);
+                return;
+            }
+
+            const html5QrCode = new Html5Qrcode("reader");
+            scannerRef.current = html5QrCode;
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    // Success callback
+                    console.log("✅ QR Code Detected:", decodedText);
+
+                    // Stop first to release camera, then navigate
+                    stopCameraScan().then(() => {
+                        console.log("Scanner stopped. Triggering success navigation with:", decodedText);
+                        if (onScanSuccess) onScanSuccess(decodedText);
+                    }).catch(err => {
+                        console.warn("Scanner stop failed, forcing navigation:", err);
+                        if (onScanSuccess) onScanSuccess(decodedText);
+                    });
+                },
+                (errorMessage) => {
+                    // Error callback (called frequently if no QR found, ignore mostly)
+                    // console.log("Scanning frame...", errorMessage); 
+                }
+            ).catch(err => {
+                console.error("❌ Failed to start scanner:", err);
+                setError("Camera permission denied (Click 'Simulate' if on desktop). Error: " + err);
+                setIsCameraActive(false);
+            });
+        }, 300); // Increased delay slightly to be safe
+    };
+
+    const stopCameraScan = async () => {
+        if (scannerRef.current) {
+            try {
+                await scannerRef.current.stop();
+                scannerRef.current.clear();
+            } catch (err) {
+                console.warn("Stop scanner error:", err);
+            }
+            scannerRef.current = null;
+        }
+        setIsCameraActive(false);
+    };
+
+    return (
+        <div className="container" style={{
+            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            height: '100%',
-            backgroundColor: '#000', // Camera view feel
-            color: 'white',
-            position: 'relative',
-        },
-        scannerFrame: {
-            width: '250px',
-            height: '250px',
-            border: '2px solid #00ff00',
-            borderRadius: '20px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: '40px',
-            position: 'relative',
-            boxShadow: '0 0 20px rgba(0, 255, 0, 0.5)',
-        },
-        scanLine: {
-            width: '100%',
-            height: '2px',
-            backgroundColor: '#00ff00',
-            position: 'absolute',
-            animation: 'scan 2s infinite linear',
-        },
-        instruction: {
-            marginBottom: '30px',
-            color: '#ccc',
-            fontSize: '14px',
-        },
-        button: {
-            padding: '12px 24px',
-            backgroundColor: 'transparent',
-            color: '#00ff00',
-            border: '1px solid #00ff00',
-            borderRadius: '30px',
-            fontSize: '16px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-        },
-        cancelButton: {
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            background: 'none',
-            border: 'none',
-            color: 'white',
-            fontSize: '24px',
-            cursor: 'pointer',
-        }
-    };
+            backgroundColor: '#000', // Camera feel
+            color: 'white'
+        }}>
+            <h2 style={{ marginBottom: '20px' }}>Scan QR Code</h2>
 
-    return (
-        <div style={styles.container}>
-            {/* <button style={styles.cancelButton} onClick={onCancel}>✕</button> */}
+            {error && (
+                <div className="card" style={{ backgroundColor: '#f8d7da', color: '#721c24', marginBottom: 20 }}>
+                    {error}
+                </div>
+            )}
 
-            <div style={styles.scannerFrame}>
-                {scanning && (
-                    <>
-                        <div className="scan-line" style={{
-                            width: '100%',
-                            height: '2px',
-                            backgroundColor: '#00ff00',
-                            position: 'absolute',
-                            top: '50%',
-                            boxShadow: '0 0 4px #00ff00'
-                        }} />
-                        {/* We would use a real <video> element here */}
-                        <span style={{ fontSize: '12px', color: '#00ff00' }}>[CAMERA FEED]</span>
-                    </>
+            {/* Camera Container */}
+            <div id="reader" style={{
+                width: '100%',
+                maxWidth: '300px',
+                height: '300px',
+                backgroundColor: isCameraActive ? '#000' : '#222',
+                marginBottom: '20px',
+                display: isCameraActive ? 'block' : 'none',
+                borderRadius: '8px',
+                overflow: 'hidden'
+            }}></div>
+
+            {/* Placeholder Container when Camera OFF */}
+            {!isCameraActive && (
+                <div style={{
+                    width: '300px',
+                    height: '300px',
+                    border: '2px dashed #444',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '20px',
+                    color: '#666'
+                }}>
+                    <p>Camera Off</p>
+                </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', maxWidth: '300px' }}>
+                {!isCameraActive ? (
+                    <button
+                        className="btn"
+                        style={{ backgroundColor: '#28a745', color: 'white', padding: '15px' }}
+                        onClick={startCameraScan}
+                    >
+                        📸 Scan using Camera
+                    </button>
+                ) : (
+                    <button
+                        className="btn"
+                        style={{ backgroundColor: '#dc3545', color: 'white', padding: '15px' }}
+                        onClick={stopCameraScan}
+                    >
+                        Stop Camera
+                    </button>
                 )}
+
+                <button
+                    className="btn"
+                    style={{ backgroundColor: 'transparent', border: '1px solid #666', color: '#ccc', padding: '15px' }}
+                    onClick={handleSimulateScan}
+                >
+                    Simulate Scan (Test)
+                </button>
             </div>
-
-            <p style={styles.instruction}>Align QR code within the frame</p>
-
-            <button style={styles.button} onClick={handleSimulateScan}>
-                Simulate Scan
-            </button>
         </div>
     );
 }

@@ -68,7 +68,6 @@ exports.getRequests = async (req, res) => {
     const requests = await prisma.driverRequest.findMany({
       where: {
         status: 'PENDING',
-        ticket: { parkingAreaId: driver.parkingAreaId },
         driverId: req.user.id
       },
       include: { ticket: true }

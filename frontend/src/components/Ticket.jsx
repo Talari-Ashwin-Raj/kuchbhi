@@ -60,6 +60,13 @@ function Ticket({ ticket, onRequestRetrieval, onNavigate }) {
                     <div style={{ color: '#666', fontSize: '14px' }}>Location ID</div>
                     <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>{ticket.parkingAreaId}</div>
 
+                    <div style={{ color: '#666', fontSize: '14px' }}>Vehicle</div>
+                    <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>
+                        {ticket.cars?.plateNumber || ticket.cars?.model || 'N/A'}
+                    </div>
+
+
+
                     <div style={{ color: '#666', fontSize: '14px' }}>Entry Time</div>
                     <div style={{ fontWeight: 'bold' }}>{new Date(ticket.createdAt).toLocaleString()}</div>
                 </div>

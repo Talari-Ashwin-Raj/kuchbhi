@@ -69,7 +69,7 @@ function MakePayment({ onNavigate, onPay, amount }) {
                 }}
                 disabled={isProcessing}
             >
-                {isProcessing ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
+                {isProcessing ? 'Processing...' : `Pay ₹${amount.toFixed(2)}`}
             </button>
         </div>
     );

@@ -105,14 +105,6 @@ function LoginScreen({ onLogin, onNavigate }) {
                 <div style={styles.link} onClick={() => onNavigate('REGISTER')}>
                     Don't have an account? Register
                 </div>
-
-                <div style={styles['testcreds']}>
-                    <strong>Test Credentials:</strong><br />
-                    User: user@test.com / 123<br />
-                    Manager: manager@test.com / 123<br />
-                    Driver: driver@test.com / 123<br />
-                    Admin: admin@test.com / 123
-                </div>
             </div>
         </div>
     );

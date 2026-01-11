@@ -81,7 +81,7 @@ function Dashboard({ user, activeTicket, onNavigate }) {
                         alignItems: 'center',
                         flexWrap: 'wrap'
                     }}
-                    onClick={() => onNavigate('TICKET_DISPLAY')}
+                    onClick={() => onNavigate('TICKET_DISPLAY', { ticket: currentActive })}
                 >
                     <div>
                         <strong style={{ fontSize: '1.1rem' }}>🎫 Active Ticket</strong>
@@ -131,8 +131,13 @@ function Dashboard({ user, activeTicket, onNavigate }) {
             )}
 
             <div className="grid">
-                {!loading && pastTickets.map(ticket => (
-                    <div key={ticket.id} className="card">
+                {!loading && pastTickets.map((ticket, index) => (
+                    <div
+                        key={ticket.id || ticket.ticketNumber || index}
+                        className="card"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => onNavigate('TICKET_DISPLAY', { ticket })}
+                    >
                         <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{ticket.parkingArea?.name || 'Parking Area'}</div>
                         <div style={{ color: '#666', fontSize: '0.9rem', margin: '5px 0' }}>
                             {new Date(ticket.createdAt).toLocaleString()}

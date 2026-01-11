@@ -1,5 +1,6 @@
 :root {
-  --primary-color: #4f46e5; /* Indigo */
+  --primary-color: #4f46e5;
+  /* Indigo */
   --primary-hover: #4338ca;
   --bg-color: #f5f7fa;
   --card-bg: #ffffff;
@@ -27,7 +28,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-primary);
   margin-bottom: 0.5em;
   font-weight: 600;
@@ -39,7 +45,9 @@ button {
   transition: all 0.2s ease;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: inherit;
   font-size: 1rem;
 }

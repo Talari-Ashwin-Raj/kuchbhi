@@ -118,6 +118,12 @@ function App() {
   const navigateTo = (screen, data = {}) => {
     if (Object.keys(data).length > 0) {
       setBookingFlow(prev => ({ ...prev, ...data }));
+      if (data.ticket) {
+        setActiveTicket(data.ticket);
+      }
+    }
+    if (data.ticket) {
+      setActiveTicket(data.ticket);
     }
     if (screen == 'LOGIN' || screen == 'REGISTER') {
       setCurrentScreen(screen);
